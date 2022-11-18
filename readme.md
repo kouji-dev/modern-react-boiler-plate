@@ -23,4 +23,9 @@ TLD'R! this is the following syllabus summarizing the main topics that will be d
 - [axios](https://axios-http.com/fr/docs/intro): Standard wrapper of fetch api 🤝
 
 ## Conventions
+
+#### Architecture
+#### File naming
+#### Features/Modules
+
 ## Best practices
