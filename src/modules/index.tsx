@@ -1,18 +1,31 @@
 import {Routes} from "@common/types";
 import {lazy} from "react";
-import {LazyLoader} from "@common/layout";
+import { Main} from "@common/layout";
+import {createHashRouter} from "react-router-dom";
+import {_404} from "@common/page-utils";
 
-const LazyHomeModule = lazy(() => new Promise<{default: any}>(resolve => setTimeout(() => resolve(import('@modules/home')), 1000)));
-const LazyCounterModule = lazy(() => new Promise<{default: any}>(resolve => setTimeout(() => resolve(import('@modules/counter')), 2500)));
+const LazyAuthModule = lazy(() => import('@modules/auth'))
+const LazyHomeModule = lazy(() => import('@modules/home'));
 
 export const ROUTES: Routes = [
     {
-        index: true,
-        path: '',
-        element: <LazyLoader component={<LazyHomeModule/>}/>,
+        path: 'home/*',
+        element: <LazyHomeModule/>,
+    },
+]
+
+export const router = createHashRouter([
+    {
+        path: '/',
+        element: <Main/>,
+        children: ROUTES
     },
     {
-        path: 'counter',
-        element: <LazyLoader component={<LazyCounterModule/>}/>
+        path: 'auth',
+        element: <LazyAuthModule/>
+    },
+    {
+        path: '*',
+        element: <_404/>
     }
-]
+]);

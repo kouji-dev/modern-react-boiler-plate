@@ -9,7 +9,7 @@ import {
 import {Outlet} from "react-router-dom";
 import Grid from "@mui/material/Unstable_Grid2";
 import {NavigationBar, NavigationMenu} from "@common/navigation";
-import {ReactNode, Suspense} from "react";
+import {ComponentType, ReactNode, Suspense} from "react";
 
 const Body = styled(Grid)<Grid2Props>(({theme}) => ({
     position: 'relative',
@@ -82,4 +82,8 @@ export const LazyLoader: ComponentWithProps<{ component?: ReactNode | undefined 
             {component}
         </Suspense>
     )
+}
+
+export const withLazyNess = (C: ComponentType) => {
+    return () => <LazyLoader component={<C/>}/>
 }

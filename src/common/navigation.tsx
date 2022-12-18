@@ -1,18 +1,18 @@
 import {
-    AppBar,
-    CSSObject,
+    AppBar, Collapse,
+    CSSObject, IconButton,
     List,
-    ListItem,
     ListItemButton,
     ListItemIcon,
-    ListItemText, ListProps, styled,
+    ListItemText, ListProps, Popover, styled,
     Theme, Toolbar, Typography,
     useMediaQuery
 } from "@mui/material";
-import {Component, ComponentWithChildren, NavigationMenuRoutes} from "@common/types";
+import {Component, ComponentWithChildren, NavigationMenuRoute, NavigationMenuRoutes} from "@common/types";
 import Grid from "@mui/material/Unstable_Grid2";
-import {Calculate, Home} from "@mui/icons-material";
+import {Calculate, ExpandLess, ExpandMore, Home} from "@mui/icons-material";
 import {useNavigate} from "react-router-dom";
+import {MouseEventHandler, SyntheticEvent, useCallback, useMemo, useRef, useState} from "react";
 
 const openedMixin = (theme: Theme ): CSSObject => ({
     transition: theme.transitions.create('width', {
@@ -32,8 +32,14 @@ const closedMixin = (theme: Theme): CSSObject => ({
 });
 
 const navigationRoutes: NavigationMenuRoutes = [
-    {path: '', label: 'Home', icon: <Home/>},
-    {path: 'counter', label: 'Counter', icon: <Calculate/>},
+    {
+        path: 'home',
+        label: 'Home',
+        icon: <Home/>,
+        children: [
+            {path: 'counter', label: 'Counter', icon: <Calculate/>}
+        ]
+    },
 ]
 
 type OpenableListProps = ListProps & {open?: boolean};
@@ -50,28 +56,122 @@ const NavigationList = styled(OpenableList, {shouldForwardProp: prop => prop != 
     ...(!open && closedMixin(theme)),
 }))
 
+type ExpandedListProps = {
+    route: NavigationMenuRoute,
+    parentPath?: string,
+    isOpen?: boolean,
+    onNavigate: (path: string) => void
+}
+
+const ExpandedList: ComponentWithChildren<ExpandedListProps> = (props) => {
+    const [expanded, setExpanded] = useState<boolean>(false);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [openItems, setOpenItems] = useState(false);
+
+    const onToggleExpand = (e: SyntheticEvent) => {
+        e.stopPropagation();
+        setExpanded(o => !o)
+    }
+
+    const {
+        onNavigate,
+        route: {icon, path, label, children},
+        parentPath = '',
+        isOpen
+    } = props;
+
+    const joinPath = useMemo(() => [parentPath, path].join('/'), [parentPath, path])
+
+    const onParentNavigate = () => onNavigate(joinPath)
+
+    let nestedRoutes = <></>;
+
+    if (children?.length) {
+        nestedRoutes = (
+            <Collapse in={expanded} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                    {children?.map(nestedRoute => (<ExpandedList key={[joinPath, nestedRoute.path].join('/')} route={nestedRoute} onNavigate={onNavigate} isOpen={isOpen} parentPath={joinPath}/>))}
+                </List>
+            </Collapse>
+        )
+    }
+
+    const onMouseEnter = (event: any) => {
+        console.log('enter', event)
+        setAnchorEl(event.currentTarget)
+        setOpenItems(true)
+    }
+
+    const onMouseLeave = () => {
+        setAnchorEl(null)
+        setOpenItems(false)
+    }
+
+    const menuItem = (
+        <ListItemButton
+            sx={{justifyContent: 'center'}}
+            onClick={onParentNavigate}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+        >
+            <ListItemIcon sx={{justifyContent: 'center'}}>
+                {icon}
+            </ListItemIcon>
+            <ListItemText primary={label} sx={{opacity: isOpen ? 1 : 0 }}/>
+            {isOpen && children?.length && (<IconButton onClick={(e) => onToggleExpand(e)}>{expanded ? <ExpandLess /> : <ExpandMore />}</IconButton>)}
+        </ListItemButton>
+    )
+
+    if (isOpen) {
+        return (
+            <>
+                {menuItem}
+                {nestedRoutes}
+            </>
+        );
+    }
+
+    console.log({isOpen})
+
+    return (
+        <>
+            {menuItem}
+            <Popover
+                open={openItems}
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                    vertical: 'center',
+                    horizontal: 'right',
+                }}
+            >
+                {nestedRoutes}
+            </Popover>
+        </>
+    )
+}
+
 export const NavigationMenu: Component = () => {
     const navigate = useNavigate();
     const open = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'));
-
-    const onNavigate = (path: string) => navigate(path);
+    const onNavigate = useCallback((path: string) => {
+        navigate(path)
+    }, []);
 
     return (
         <Grid xs='auto'>
-            <NavigationList open={open}>
-                {navigationRoutes.map(({path, label, icon}) => (
-                    <ListItem
-                        key={label}
-                        disablePadding
-                    >
-                        <ListItemButton sx={{justifyContent: 'center'}} onClick={() => onNavigate(path)}>
-                            <ListItemIcon sx={{justifyContent: 'center'}}>
-                                {icon}
-                            </ListItemIcon>
-                            <ListItemText primary={label} sx={{opacity: open ? 1 : 0 }}/>
-                        </ListItemButton>
-                    </ListItem>
-                ))}
+            <NavigationList
+                dense
+                disablePadding
+                open={open}
+            >
+                {navigationRoutes.map((route) => <ExpandedList
+                    key={route.path}
+                    parentPath=''
+                    route={route}
+                    onNavigate={onNavigate}
+                    isOpen={open}
+                />)
+                }
             </NavigationList>
         </Grid>
     )

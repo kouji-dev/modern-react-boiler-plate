@@ -22,6 +22,7 @@
       "@common/*": ["common/*"],
       "@modules/*": ["modules/*"],
       "@modules": ["modules/index"],
+      "@models/*": ["models/*"],
     }
   },
   "include": ["src"],
