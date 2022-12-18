@@ -11,11 +11,13 @@ const NavMenuList = styled(List)(({theme}) => ({
 }))
 
 export const Navmenu: Component = () => {
-  return (<Container xs="auto">
-      <NavMenuList>
+  return (
+  <Container xs="auto">
+      <NavMenuList dense>
           <ListItem>
               Item
-              </ListItem>
-          </NavMenuList>
-  </Container>);
+        </ListItem>
+    </NavMenuList>
+  </Container>
+  );
 };
