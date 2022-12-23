@@ -7,9 +7,10 @@ export type ComponentWithProps<P> = FC<P>;
 
 export type Routes = RouteObject[];
 export type NavigationMenuRoute = {
-    path: string,
-    label: string,
-    icon: ReactNode,
-    children?: NavigationMenuRoutes
+    path: string;
+    label: string;
+    icon: ReactNode;
+    children?: NavigationMenuRoutes;
+    isMenuItem?: boolean;
 }
 export type NavigationMenuRoutes = NavigationMenuRoute[];
